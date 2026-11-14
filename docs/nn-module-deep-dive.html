@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>nn.Module 精读笔记</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #fafaf9; color: #2c2c2a;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+    font-size: 14px; line-height: 1.7;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 44px 24px 90px; }
+  h1 { font-size: 23px; font-weight: 600; margin: 0 0 6px; letter-spacing: -0.3px; }
+  .sub { color: #5f5e5a; font-size: 13px; margin-bottom: 26px; }
+  h2 {
+    font-size: 16px; font-weight: 600; margin: 42px 0 10px; padding-top: 18px;
+    border-top: 1px solid #e7e5e0;
+  }
+  h2 .idx { color: #185FA5; margin-right: 8px; }
+  h3 { font-size: 14px; font-weight: 600; margin: 22px 0 8px; color: #444441; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 10px 0; padding-left: 22px; }
+  li { margin: 5px 0; }
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12.5px; background: #f2f1ec; padding: 1.5px 5px; border-radius: 4px; color: #0C447C;
+  }
+  pre {
+    background: #f7f6f2; border: 1px solid #e7e5e0; border-radius: 10px;
+    padding: 14px 16px; overflow-x: auto; margin: 12px 0;
+  }
+  pre code { background: none; padding: 0; font-size: 12.5px; line-height: 1.65; color: #2c2c2a; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 14px 0; background: #fff; border: 1px solid #e7e5e0; border-radius: 10px; overflow: hidden; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid #f0eeea; vertical-align: top; }
+  th { background: #f5f4f0; font-weight: 600; font-size: 12px; color: #444441; }
+  tr:last-child td { border-bottom: none; }
+  td.mono, th.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; white-space: nowrap; }
+  .callout {
+    background: #E6F1FB; border-left: 3px solid #185FA5; border-radius: 0 8px 8px 0;
+    padding: 12px 16px; margin: 16px 0; font-size: 13.5px;
+  }
+  .warnbox {
+    background: #FCEBEB; border-left: 3px solid #A32D2D; border-radius: 0 8px 8px 0;
+    padding: 12px 16px; margin: 16px 0; font-size: 13.5px;
+  }
+  .okbox {
+    background: #E1F5EE; border-left: 3px solid #0F6E56; border-radius: 0 8px 8px 0;
+    padding: 12px 16px; margin: 16px 0; font-size: 13.5px;
+  }
+  .callout strong, .warnbox strong, .okbox strong { font-weight: 600; }
+  footer { margin-top: 50px; padding-top: 16px; border-top: 1px solid #e7e5e0; color: #888780; font-size: 12px; }
+  .tag {
+    display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 4px;
+    background: #E6F1FB; color: #185FA5; margin-left: 6px; vertical-align: 1px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>nn.Module 精读笔记</h1>
+<div class="sub">五件套：__init__ 属性表 / __setattr__ 路由 / _apply / state_dict / 四类 hook。以 PyTorch 2.x 源码为准，个别字段在不同小版本有增删。</div>
+
+<h2><span class="idx">01</span>__init__ 到底建了什么</h2>
+
+<p>每个 Module 实例初始化后，<code>__dict__</code> 里躺着这些由基类写入的字段。<strong>它们全部通过 <code>super().__setattr__</code> 写入，绕过了你自己的路由逻辑</strong>——这就是不调 <code>super().__init__()</code> 必崩的原因。</p>
+
+<h3>四张数据表</h3>
+<table>
+  <thead><tr><th class="mono">字段</th><th class="mono">类型</th><th>作用</th></tr></thead>
+  <tbody>
+    <tr><td class="mono">_parameters</td><td class="mono">dict</td><td>name → Parameter，优化器从这里拿东西</td></tr>
+    <tr><td class="mono">_buffers</td><td class="mono">dict</td><td>name → Tensor，不训练但要存要迁</td></tr>
+    <tr><td class="mono">_modules</td><td class="mono">dict</td><td>name → Module，子树</td></tr>
+    <tr><td class="mono">_non_persistent_buffers_set</td><td class="mono">set</td><td>不进 state_dict 的 buffer 名字集合</td></tr>
+  </tbody>
+</table>
+
+<h3>一个状态标志</h3>
+<table>
+  <tbody>
+    <tr><td class="mono" style="width:34%">training</td><td class="mono" style="width:16%">bool</td><td>初始 True。<code>train()</code>/<code>eval()</code> 递归改写它，Dropout / BatchNorm 在 forward 里自己读它决定行为</td></tr>
+  </tbody>
+</table>
+
+<h3>十二组钩子字典</h3>
+<p>全部是 <code>OrderedDict</code>：既保证执行顺序，又能按 handle 精确删除。</p>
+<table>
+  <thead><tr><th class="mono">字段</th><th>触发时机</th></tr></thead>
+  <tbody>
+    <tr><td class="mono">_forward_pre_hooks</td><td>forward 之前，可改写输入</td></tr>
+    <tr><td class="mono">_forward_pre_hooks_with_kwargs</td><td>同上，但带 keyword 参数</td></tr>
+    <tr><td class="mono">_forward_hooks</td><td>forward 之后，可改写输出</td></tr>
+    <tr><td class="mono">_forward_hooks_with_kwargs</td><td>同上，带 kwargs</td></tr>
+    <tr><td class="mono">_forward_hooks_always_called</td><td>标记哪些 hook 即使抛异常也必须调用</td></tr>
+    <tr><td class="mono">_backward_pre_hooks</td><td>反向传播到达本模块之前</td></tr>
+    <tr><td class="mono">_backward_hooks</td><td>反向传播经过本模块之后</td></tr>
+    <tr><td class="mono">_is_full_backward_hook</td><td>标志位，区分新旧两种 backward hook 语义</td></tr>
+    <tr><td class="mono">_state_dict_pre_hooks</td><td>保存前</td></tr>
+    <tr><td class="mono">_state_dict_hooks</td><td>保存后，可改写产出的 dict</td></tr>
+    <tr><td class="mono">_load_state_dict_pre_hooks</td><td>加载前，可改写待加载 dict</td></tr>
+    <tr><td class="mono">_load_state_dict_post_hooks</td><td>加载后，可改写 incompatible_keys</td></tr>
+  </tbody>
+</table>
+
+<h3>一个编译缓存</h3>
+<p><code>_compiled_call_impl</code>：<code>torch.compile</code> 命中后，<code>__call__</code> 会直接走这个预编译版本，跳过动态 hook 检查以降低 Python 开销。</p>
+
+<div class="callout">
+  <strong>验证方式：</strong><code>print(sorted(m.__dict__.keys()))</code>。不同版本字段数会变，理解"分四类：表 / 标志 / 钩子 / 缓存"比背数字有用。
+</div>
+
+<h2><span class="idx">02</span>__setattr__ 的三岔路由</h2>
+
+<p>这是 nn.Module 唯一真正的"魔法"。每一次 <code>self.xxx = value</code> 都在被分类：</p>
+
+<pre><code>def __setattr__(self, name, value):
+    def remove_from(*dicts_or_sets):
+        for d in dicts_or_sets:
+            if name in d:
+                if isinstance(d, dict):
+                    del d[name]
+                else:
+                    d.discard(name)
+
+    params = self.__dict__.get('_parameters')
+    if isinstance(value, Parameter):
+        # 岔路一：参数
+        remove_from(self.__dict__, self._buffers, self._modules,
+                    self._non_persistent_buffers_set)
+        self.register_parameter(name, value)
+
+    elif params is not None and name in params:
+        # 已经注册为参数的名字，只允许赋 None（=注销）
+        if value is not None:
+            raise TypeError(f"cannot assign '{torch.typename(value)}' as parameter '{name}'")
+        self.register_parameter(name, value)
+
+    else:
+        modules = self.__dict__.get('_modules')
+        if isinstance(value, Module):
+            # 岔路二：子模块
+            remove_from(self.__dict__, self._parameters, self._buffers,
+                        self._non_persistent_buffers_set)
+            modules[name] = value
+        else:
+            buffers = self.__dict__.get('_buffers')
+            if buffers is not None and name in buffers:
+                # 岔路三：替换已有 buffer
+                if value is not None and not isinstance(value, torch.Tensor):
+                    raise TypeError(f"cannot assign '{torch.typename(value)}' as buffer '{name}'")
+                buffers[name] = value
+            else:
+                # 默认：普通属性，PyTorch 完全不管
+                object.__setattr__(self, name, value)</code></pre>
+
+<h3>四条推论</h3>
+<ol>
+  <li><strong>普通张量会静默漏掉</strong>：<code>self.w = torch.ones(3)</code> 走最后一支，不进任何表 → 不在 <code>parameters()</code>、不进 <code>state_dict</code>、不随 <code>.to()</code> 迁移。不报错，是纯静默失败。</li>
+  <li><strong>同名会互踢</strong>：<code>remove_from</code> 会把同名项从其他表里删掉。所以一个名字只能属于一张表，先设参数再设 buffer 同名，前者会消失。</li>
+  <li><strong>赋 <code>None</code> 是"注销"</strong>：<code>self.w = None</code> 对已注册的参数会把它从 <code>_parameters</code> 里移除（值置 None），这是官方支持的临时禁用层的手法。</li>
+  <li><strong>读的时候有兜底</strong>：<code>__getattr__</code> 依次查 <code>_parameters</code> → <code>_buffers</code> → <code>_modules</code>，都没找到才抛 AttributeError。</li>
+</ol>
+
+<div class="warnbox">
+  <strong>反模式：</strong>直接操作 <code>self._parameters['w'] = ...</code>。绕过了类型检查和互踢逻辑，容易造出"幽灵参数"——它在表里但不在 <code>__dict__</code>，或者反过来的。永远用 <code>register_parameter</code> / <code>register_buffer</code>。
+</div>
+
+<h2><span class="idx">03</span>_apply：设备与精度的唯一引擎</h2>
+
+<p><code>.to()</code> / <code>.cuda()</code> / <code>.cpu()</code> / <code>.float()</code> / <code>.half()</code> / <code>.bfloat16()</code> 全都只是薄封装，真正干活的是 <code>_apply(fn)</code>：</p>
+
+<pre><code>def _apply(self, fn, recurse=True):
+    if recurse:
+        for module in self.children():
+            module._apply(fn, recurse)
+
+    for key, param in self._parameters.items():
+        if param is None:
+            continue
+        with torch.no_grad():
+            param_applied = fn(param)          # 生成新张量
+        param_grad = param.grad
+        ...
+        param.data = param_applied             # 只换底层 storage！
+        if param_grad is not None:
+            param.grad = param_grad
+
+    for key, buf in self._buffers.items():
+        if buf is not None:
+            self._buffers[key] = fn(buf)       # buffer 直接被替换成新张量
+
+    return self</code></pre>
+
+<h3>to() 里的那个细节</h3>
+<pre><code>def convert(t):
+    if convert_to_format is not None and t.dim() in (4, 5):
+        return t.to(device, dtype if t.is_floating_point() or t.is_complex() else None,
+                    non_blocking, memory_format=convert_to_format)
+    return t.to(device, dtype if t.is_floating_point() or t.is_complex() else None,
+                non_blocking)</code></pre>
+<p>注意 <code>dtype if t.is_floating_point() else None</code>：<strong>整数 buffer 只换设备、不换精度</strong>。所以 BatchNorm 的 <code>num_batches_tracked</code>（int64）不会被 <code>.half()</code> 变成 fp16。</p>
+
+<h3>三个必知的坑</h3>
+<ol>
+  <li><strong>Parameter 对象本身没变</strong>（只换了 <code>.data</code>），所以 <code>optimizer = Adam(model.parameters())</code> 在 <code>.to(device)</code> 之后依然有效。这是设计上的正确性保证。</li>
+  <li><strong>但 optimizer 的 state 不会跟着搬</strong>：Adam 的 <code>exp_avg</code> / <code>exp_avg_sq</code> 还在旧设备。跨设备恢复训练必须手动迁，否则报 "expected all tensors on same device"。</li>
+  <li><strong>buffer 是被替换而非原地改</strong>：如果你在别处持有 <code>buf</code> 的引用（比如某个 hook 里存了），<code>.to()</code> 之后那个引用指向的是旧张量，已经失效。</li>
+</ol>
+
+<div class="callout">
+  <strong>进阶开关：</strong><code>torch.__future__.set_overwrite_module_params_on_conversion(True)</code> 会让 <code>.to()</code> 创建<strong>新的 Parameter 对象</strong>而不是改 <code>.data</code>。这样做之后老的 optimizer 就失效了——这是"我希望换设备后重新建优化器"场景下的显式选择。
+</div>
+
+<h2><span class="idx">04</span>state_dict 的存取规则</h2>
+
+<h3>生成规则</h3>
+<pre><code>def _save_to_state_dict(self, destination, prefix, keep_vars):
+    for name, param in self._parameters.items():
+        if param is not None:
+            destination[prefix + name] = param if keep_vars else param.detach()
+    for name, buf in self._buffers.items():
+        if buf is not None and name not in self._non_persistent_buffers_set:
+            destination[prefix + name] = buf if keep_vars else buf.detach()
+
+def state_dict(self, destination=None, prefix='', keep_vars=False):
+    self._save_to_state_dict(destination, prefix, keep_vars)
+    for name, module in self._modules.items():
+        if module is not None:
+            module.state_dict(destination, prefix + name + '.', keep_vars)
+    return destination</code></pre>
+
+<ol>
+  <li><strong>顺序</strong>：先自己的参数，再自己的 buffer，然后递归每个子模块。所以键序是"参数 → buffer → 子树"。</li>
+  <li><strong>键名</strong>：<code>prefix + name</code>，子模块的前缀自动拼接，得到 <code>blocks.0.attn.qkv.weight</code> 这种路径。</li>
+  <li><strong>值是引用</strong>：<code>keep_vars=False</code> 时取 <code>.detach()</code>，仍<strong>共享同一份 storage</strong>。要留快照必须 <code>copy.deepcopy</code>，否则后续训练会改掉你的"存档"。</li>
+  <li><strong>跳过 persistent=False 的 buffer</strong>：可通过 <code>register_buffer(name, t, persistent=False)</code> 排除。</li>
+</ol>
+
+<h3>加载规则</h3>
+<pre><code>def load_state_dict(self, state_dict, strict=True, assign=False):
+    ...
+    def load(module, local_state_dict, prefix=''):
+        module._load_from_state_dict(local_state_dict, prefix, local_metadata,
+                                     True, missing_keys, unexpected_keys, error_msgs)
+        for name, child in module._modules.items():
+            if child is not None:
+                child_prefix = prefix + name + '.'
+                load(child, {k: v for k, v in local_state_dict.items()
+                             if k.startswith(child_prefix)}, child_prefix)
+    ...
+    if strict:
+        if unexpected_keys: error_msgs.append(...)
+        elif missing_keys:  error_msgs.append(...)
+    if error_msgs: raise RuntimeError(...)
+    return _IncompatibleKeys(missing_keys, unexpected_keys)</code></pre>
+
+<ul>
+  <li><strong>默认是 <code>copy_</code> 语义</strong>：把值拷进已有的参数张量，形状必须匹配。</li>
+  <li><strong><code>assign=True</code></strong>：直接替换 Parameter 对象，形状可以不同。配合 <code>meta</code> device 做延迟初始化时必备。</li>
+  <li><strong><code>strict=True</code></strong> 同时检查两个方向：<code>missing_keys</code>（模型有、文件没有）和 <code>unexpected_keys</code>（文件有、模型没有）。</li>
+</ul>
+
+<h3>报错对照表</h3>
+<table>
+  <thead><tr><th class="mono" style="width:30%">报错</th><th>真正原因</th></tr></thead>
+  <tbody>
+    <tr><td class="mono">Missing key(s)</td><td>模型里新增了层，或保存时用了 <code>DataParallel</code> 前缀 <code>module.</code> 而现在没有</td></tr>
+    <tr><td class="mono">Unexpected key(s)</td><td>文件里的结构和当前模型不一致；常见于改了 <code>ModuleList</code> 的顺序或层数</td></tr>
+    <tr><td class="mono">size mismatch</td><td>改了 num_embeddings / 分类头类别数；只能靠 <code>strict=False</code> 跳过或重新初始化该层</td></tr>
+    <tr><td class="mono">加载后指标全崩</td><td>最常见：忘了 <code>model.eval()</code>，或 key 顺序对了但语义对错了（例如把 qkv 拆分方式改了）</td></tr>
+  </tbody>
+</table>
+
+<div class="okbox">
+  <strong>工程习惯：</strong>checkpoint 里只存 <code>state_dict</code> + 一个独立的 <code>config.json</code>，不要 <code>torch.save(model)</code>。前者可移植、可跨版本、能被 safetensors 加速；后者把类路径腌进文件，重构代码就废了。
+</div>
+
+<h2><span class="idx">05</span>四类 hook</h2>
+
+<h3>前向与反向</h3>
+<table>
+  <thead><tr><th class="mono">注册方法</th><th class="mono">回调签名</th><th>能做什么</th></tr></thead>
+  <tbody>
+    <tr><td class="mono">register_forward_pre_hook</td><td class="mono">(module, args) → new_args</td><td>改写输入（如统一 dtype、插噪声）</td></tr>
+    <tr><td class="mono">register_forward_hook</td><td class="mono">(module, args, output) → new_output</td><td>抓特征、改写输出（如量化反量化）</td></tr>
+    <tr><td class="mono">register_full_backward_pre_hook</td><td class="mono">(module, grad_output) → new_grad_output</td><td>梯度进模块前拦截（梯度裁剪）</td></tr>
+    <tr><td class="mono">register_full_backward_hook</td><td class="mono">(module, grad_input, grad_output) → new_grad_input</td><td>梯度出模块后改写</td></tr>
+  </tbody>
+</table>
+
+<p>另有四个 state_dict 钩子：<code>register_state_dict_pre_hook</code> / <code>register_state_dict_post_hook</code> / <code>register_load_state_dict_pre_hook</code> / <code>register_load_state_dict_post_hook</code>。LoRA、量化、权重名映射全靠它们做"键名翻译"。</p>
+
+<h3>执行顺序</h3>
+<pre><code>__call__ → _call_impl:
+  1. 全局 forward_pre_hook          (register_module_forward_pre_hook)
+  2. self._forward_pre_hooks        ← 可返回新 args
+  3. self.forward(*args)            ← 你写的方法
+  4. self._forward_hooks            ← 可返回新 output
+  5. 全局 forward_hook</code></pre>
+
+<h3>实战片段</h3>
+<pre><code>import torch, torch.nn as nn
+
+# 抓每一层的输出统计，不用改模型代码
+def stat_hook(name):
+    def fn(module, args, output):
+        if isinstance(output, torch.Tensor):
+            print(f"{name:24s} {tuple(output.shape)} "
+                  f"mean={output.mean():.3f} std={output.std():.3f} "
+                  f"nan={torch.isnan(output).any().item()}")
+    return fn
+
+handles = [m.register_forward_hook(stat_hook(n))
+           for n, m in model.named_modules() if len(list(m.children())) == 0]
+
+model(x)
+for h in handles: h.remove()      # 一定要卸，否则重复调用会越积越多
+
+# 梯度范数监控（反向）
+def grad_hook(name):
+    def fn(module, grad_input, grad_output):
+        g = grad_output[0]
+        if g is not None:
+            print(f"{name:24s} grad_norm={g.norm():.4g}")
+    return fn</code></pre>
+
+<h3>三个约束</h3>
+<ol>
+  <li><strong>full_backward_hook 不能改 forward 的中间变量</strong>，只能改流入的梯度；且模块里有 inplace 操作时会直接报错。</li>
+  <li><strong>hook 必须 remove</strong>：返回的 handle 不卸载会一直累积，长训练里既慢又容易内存泄漏。</li>
+  <li><strong>不要重写 <code>__call__</code></strong>：那会绕开 ①②④⑤ 全部钩子，让所有依赖 hook 的工具（profiler、量化、梯度检查点）失效。要定制行为就写 <code>forward</code>。</li>
+</ol>
+
+<h2><span class="idx">06</span>一页速查</h2>
+<table>
+  <thead><tr><th style="width:26%">你想做的事</th><th>用哪个</th></tr></thead>
+  <tbody>
+    <tr><td>加一个可训练张量</td><td><code>self.w = nn.Parameter(t)</code></td></tr>
+    <tr><td>加一个不训练但要存的张量</td><td><code>self.register_buffer("b", t)</code></td></tr>
+    <tr><td>按路径取子模块</td><td><code>model.get_submodule("blocks.3.attn")</code></td></tr>
+    <tr><td>遍历所有叶子层</td><td><code>[m for m in model.modules() if not list(m.children())]</code></td></tr>
+    <tr><td>替换某一类层（量化/LoRA）</td><td>遍历 <code>named_modules()</code> + <code>setattr(parent, name, NewLayer(...))</code></td></tr>
+    <tr><td>改权重名做兼容加载</td><td><code>register_load_state_dict_pre_hook</code></td></tr>
+    <tr><td>搬设备后 optimizer 报错</td><td>手动迁 <code>optimizer.state</code> 里的张量</td></tr>
+    <tr><td>存快照 / EMA</td><td><code>copy.deepcopy(model.state_dict())</code></td></tr>
+  </tbody>
+</table>
+
+<footer>
+  PyTorch 2.x 源码精读 · 字段与路径随版本略有变动，以本机 <code>torch/nn/modules/module.py</code> 为准
+</footer>
+
+</div>
+</body>
+</html>

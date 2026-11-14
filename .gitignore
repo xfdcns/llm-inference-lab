@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+*.so
+.ipynb_checkpoints/
+
+.venv/
+venv/
+env/
+
+# profiling 原始报告体积大，本地留存，不入库
+*.ncu-rep
+*.nsys-rep
+*.sqlite
+*.qdrep
+profiling_raw/
+
+*.log
+.DS_Store
+Thumbs.db

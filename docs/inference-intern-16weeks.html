@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>推理优化实习 · 16 周作战计划</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #fafaf9; color: #2c2c2a;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+    font-size: 14px; line-height: 1.7;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 44px 24px 90px; }
+  h1 { font-size: 23px; font-weight: 600; margin: 0 0 6px; letter-spacing: -0.3px; }
+  .sub { color: #5f5e5a; font-size: 13px; margin-bottom: 8px; }
+  .target {
+    display: inline-block; font-size: 12px; background: #E6F1FB; color: #0C447C;
+    padding: 3px 10px; border-radius: 6px; margin-bottom: 26px;
+  }
+  h2 {
+    font-size: 16px; font-weight: 600; margin: 40px 0 12px; padding-top: 16px;
+    border-top: 1px solid #e7e5e0;
+  }
+  h2 .idx { color: #185FA5; margin-right: 8px; }
+  h3 { font-size: 14px; font-weight: 600; margin: 24px 0 8px; color: #444441; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 10px 0; padding-left: 22px; }
+  li { margin: 5px 0; }
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12.5px; background: #f2f1ec; padding: 1.5px 5px; border-radius: 4px; color: #0C447C;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 14px 0; background: #fff; border: 1px solid #e7e5e0; border-radius: 10px; overflow: hidden; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #f0eeea; vertical-align: top; }
+  th { background: #f5f4f0; font-weight: 600; font-size: 12px; color: #444441; }
+  tr:last-child td { border-bottom: none; }
+  td.w { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; white-space: nowrap; color: #5F5E5A; }
+  .phase-tag {
+    display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 4px; margin-right: 4px;
+  }
+  .p1 { background: #E6F1FB; color: #0C447C; }
+  .p2 { background: #E1F5EE; color: #085041; }
+  .p3 { background: #FAEEDA; color: #633806; }
+  .p4 { background: #EEEDFE; color: #3C3489; }
+  .bar { display: flex; gap: 4px; margin: 18px 0 8px; }
+  .seg {
+    padding: 10px 12px; border-radius: 8px; font-size: 12px; line-height: 1.4;
+    border: 1px solid transparent;
+  }
+  .seg b { display: block; font-weight: 600; font-size: 12.5px; margin-bottom: 2px; }
+  .s1 { flex: 3; background: #E6F1FB; border-color: #B5D4F4; color: #0C447C; }
+  .s2 { flex: 3; background: #E1F5EE; border-color: #9FE1CB; color: #085041; }
+  .s3 { flex: 2; background: #F1EFE8; border-color: #D3D1C7; color: #444441; }
+  .s4 { flex: 4; background: #FAEEDA; border-color: #FAC775; color: #633806; }
+  .s5 { flex: 4; background: #EEEDFE; border-color: #CECBF6; color: #3C3489; }
+  .callout { background: #E6F1FB; border-left: 3px solid #185FA5; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 16px 0; font-size: 13.5px; }
+  .warnbox { background: #FCEBEB; border-left: 3px solid #A32D2D; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 16px 0; font-size: 13.5px; }
+  .okbox { background: #E1F5EE; border-left: 3px solid #0F6E56; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 16px 0; font-size: 13.5px; }
+  .check { color: #0F6E56; font-weight: 600; }
+  footer { margin-top: 50px; padding-top: 16px; border-top: 1px solid #e7e5e0; color: #888780; font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>推理优化实习 · 16 周作战计划</h1>
+<div class="sub">起点 2026-11-16（周一）· 终点 2027-03-07 · 每周投入 15–20 小时</div>
+<div class="target">目标：2027 年 3 月起投递，拿到推理优化 / 模型部署方向实习</div>
+
+<h2><span class="idx">00</span>四段式总览</h2>
+
+<div class="bar">
+  <div class="seg s1"><b>P1 地基</b>CUDA + Profiling<br>3 周</div>
+  <div class="seg s2"><b>P2 算子</b>Triton + FlashAttention<br>3 周</div>
+  <div class="seg s3"><b>P3 过渡</b>期末 / 原理补完<br>2 周</div>
+  <div class="seg s4"><b>P4 引擎</b>vLLM 源码 + 端到端调优<br>4 周（寒假）</div>
+  <div class="seg s5"><b>P5 收口</b>项目打磨 + 八股 + 投递<br>4 周</div>
+</div>
+
+<p>核心原则：<strong>每周必须有可验收的产出</strong>。看视频、读文档不算进度，只有"跑出数字 / 写出代码 / 能讲清一个 kernel"才算。</p>
+
+<h2><span class="idx">01</span>P1 地基：CUDA 与性能分析（W1–W3，11/16–12/06）</h2>
+
+<table>
+  <thead><tr><th class="w" style="width:9%">周次</th><th style="width:19%">主题</th><th>具体动作</th><th style="width:26%">验收标准</th></tr></thead>
+  <tbody>
+    <tr>
+      <td class="w">W1<br>11/16</td>
+      <td><span class="phase-tag p1">CUDA 模型</span></td>
+      <td>grid / block / warp 三级结构；global memory 访问合并；写 vector add、矩阵转置（naive → shared memory tiled 两版）</td>
+      <td>能解释为什么 tiled 转置能让 dram 吞吐上去；两版都能跑通并测出时间差</td>
+    </tr>
+    <tr>
+      <td class="w">W2<br>11/23</td>
+      <td><span class="phase-tag p1">三类 kernel</span></td>
+      <td>warp 内 reduction（用 <code>__shfl_down_sync</code>）、数值稳定的 softmax（online 版）、tiled matmul</td>
+      <td>softmax 用 ncu 证明是 memory-bound；tiled matmul 比 naive 快 3 倍以上</td>
+    </tr>
+    <tr>
+      <td class="w">W3<br>11/30</td>
+      <td><span class="phase-tag p1">Profiling</span></td>
+      <td><code>nsys</code> 看一次推理请求的时间线；<code>ncu</code> 抓 attention kernel 看 stall reason；手算 roofline</td>
+      <td>能写出：「该 kernel 的 arithmetic intensity 约 X，落在 roofline 的 memory 侧，所以优化方向是减少 HBM 读写而非减少 FLOPs」</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>环境建议：</strong>本地有 4090 / 3090 就够。装 WSL2 + CUDA 12.x + ncu（Windows 原生也能跑 ncu，但 Linux 下工具链问题少一半）。没有卡就租云 GPU，按小时计费，每天几块钱。别在这一步纠结设备，两周内必须开始写 kernel。
+</div>
+
+<h2><span class="idx">02</span>P2 算子：Triton 与 FlashAttention（W4–W6，12/07–12/27）</h2>
+
+<table>
+  <thead><tr><th class="w" style="width:9%">周次</th><th style="width:19%">主题</th><th>具体动作</th><th style="width:26%">验收标准</th></tr></thead>
+  <tbody>
+    <tr>
+      <td class="w">W4<br>12/07</td>
+      <td><span class="phase-tag p2">Triton 入门</span></td>
+      <td>官方 tutorials 01–07；用 Triton 写 fused softmax、layernorm</td>
+      <td>性能不低于 PyTorch 原生；能讲清 <code>program_id</code> / <code>BLOCK_SIZE</code> / <code>@triton.autotune</code> 各自的作用</td>
+    </tr>
+    <tr>
+      <td class="w">W5<br>12/14</td>
+      <td><span class="phase-tag p2">Matmul</span></td>
+      <td>Triton matmul + group ordering（L2 复用）+ autotune 配置空间</td>
+      <td>达到 cuBLAS 的 70% 以上；能解释 group size 为什么影响 L2 命中</td>
+    </tr>
+    <tr>
+      <td class="w">W6<br>12/21</td>
+      <td><span class="phase-tag p2">FlashAttention</span></td>
+      <td>实现 tiling + online softmax 的 attention 前向，处理 causal mask</td>
+      <td>与 <code>F.scaled_dot_product_attention</code> 数值对齐（max diff &lt; 1e-3）；画出显存占用随序列长度增长的曲线，证明不再线性于 seq²</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="okbox">
+  <strong>里程碑一（12/27）：</strong>你的 GitHub 上有一个仓库，里面是「CUDA softmax + Triton flash attention」，README 里有 ncu 截图和性能对比表。这已经是面试时能拿出来讲的东西了。
+</div>
+
+<h2><span class="idx">03</span>P3 过渡：原理补完（W7–W8，12/28–01/10）</h2>
+
+<p>期末周，降低强度，只做阅读与整理：</p>
+<ul>
+  <li>读 FlashAttention 1 / 2 / 3 三篇论文，重点抓「IO 复杂度」这个论证角度，而不是实现细节</li>
+  <li>算一遍 KV cache 显存公式，手算 7B 模型在 8K 上下文、batch=8 时的占用</li>
+  <li>把 P1–P2 的代码整理成博客草稿（写不清 = 没懂）</li>
+</ul>
+<p><strong>验收：</strong>能徒手推出 KV cache 显存公式并解释每一项，能口述 decode 阶段为什么是 memory-bound。</p>
+
+<h2><span class="idx">04</span>P4 引擎：vLLM 源码与端到端调优（W9–W12，01/11–02/07）</h2>
+
+<p>寒假是整块时间，这一段是整个计划的重心。</p>
+
+<table>
+  <thead><tr><th class="w" style="width:9%">周次</th><th style="width:19%">主题</th><th>具体动作</th><th style="width:26%">验收标准</th></tr></thead>
+  <tbody>
+    <tr>
+      <td class="w">W9<br>01/11</td>
+      <td><span class="phase-tag p3">跑起来</span></td>
+      <td>vLLM 部署 Qwen2.5-7B（或 1.5B 便于迭代）；跑 <code>benchmark_latency</code> / <code>benchmark_serving</code>；搞清 TTFT / TPOT / throughput 三者关系</td>
+      <td>能说清：为什么提高 batch 会降 TPOT 却提吞吐；KV cache 占用与 max_num_seqs 的约束关系</td>
+    </tr>
+    <tr>
+      <td class="w">W10<br>01/18</td>
+      <td><span class="phase-tag p3">源码主线</span></td>
+      <td>沿「请求 → scheduler → kv_cache_manager → model_runner → attention backend」读 V1 主线</td>
+      <td>能画出一次请求的完整调用链，标出至少 3 个潜在瓶颈点</td>
+    </tr>
+    <tr>
+      <td class="w">W11<br>01/25</td>
+      <td><span class="phase-tag p3">定位瓶颈</span></td>
+      <td>用 nsys + ncu 分析长 prompt 场景：prefill 与 decode 分别卡在哪；对比不同 attention backend</td>
+      <td>拿到一份 profiling 报告：明确「TTFT 的 X% 花在 prefill 的 attention kernel 上，该 kernel 带宽利用率 Y%」</td>
+    </tr>
+    <tr>
+      <td class="w">W12<br>02/01</td>
+      <td><span class="phase-tag p3">改一处</span></td>
+      <td>选一个方向动手：chunked prefill 参数、prefix cache 命中率、backend 切换、或自写 kernel 替换某一层</td>
+      <td>拿到前后对比数据（10% 提升也算），并能解释提升的物理来源</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="warnbox">
+  <strong>最容易翻车的地方：</strong>看完源码就想做大改造。不要。实习面试看的是「你能不能在一套真实系统里定位问题并量化改进」，不是「你能不能重写 vLLM」。把一个小改动做到有数据、可复现、讲得清，远胜于半成品的大重构。
+</div>
+
+<h2><span class="idx">05</span>P5 收口：项目、八股与投递（W13–W16，02/08–03/07）</h2>
+
+<h3>W13 项目打磨</h3>
+<ul>
+  <li>仓库结构：<code>kernel/</code>（Triton 实现）、<code>bench/</code>（压测脚本）、<code>README.md</code>（复现步骤 + 数据表 + 图）</li>
+  <li>README 必须让陌生人能照着跑出你的数字——这是面试官最看重的可信度信号</li>
+  <li>写一篇技术博客：从「发现了什么问题」写到「怎么定位、怎么改、提升多少、为什么」</li>
+</ul>
+
+<h3>W14–W15 八股（按组过，不要按文章顺序读）</h3>
+<table>
+  <thead><tr><th style="width:20%">组</th><th>必答问题</th></tr></thead>
+  <tbody>
+    <tr><td><strong>访存与 roofline</strong></td><td>为什么 decode 是 memory-bound？arithmetic intensity 怎么算？什么情况下量化对 decode 的收益最大？</td></tr>
+    <tr><td><strong>Attention</strong></td><td>FlashAttention 靠什么省显存（tiling + online softmax + 不落地 N×N）；MHA / MQA / GQA 的 KV cache 差异</td></tr>
+    <tr><td><strong>调度</strong></td><td>continuous batching 与 static batching 的吞吐差从哪来；PagedAttention 解决了什么；chunked prefill 为什么能降 TTFT 抖动；PD 分离的动机</td></tr>
+    <tr><td><strong>量化</strong></td><td>W8A8 与 W4A16 的取舍；per-token 与 per-channel 粒度；SmoothQuant 为什么要处理激活离群值；FP8 在什么硬件上可用</td></tr>
+    <tr><td><strong>解码优化</strong></td><td>投机解码的加速条件（接受率 × 草稿成本）；为什么长序列下收益下降</td></tr>
+    <tr><td><strong>分布式</strong></td><td>推理里 TP 的通信模式（每层一次 all-reduce）；什么时候该用 TP 而非加大单卡 batch</td></tr>
+    <tr><td><strong>CUDA</strong></td><td>内存层次与带宽量级；coalesced access；bank conflict；occupancy 与寄存器压力的权衡</td></tr>
+  </tbody>
+</table>
+
+<h3>W16 投递与模拟</h3>
+<ul>
+  <li><strong>2 月上旬</strong>就可以开始投日常实习（rolling，早投早面），不要等 3 月</li>
+  <li><strong>3 月初</strong>暑期实习提前批开放，同时投 20–30 家：云厂商、模型公司、AI 基础设施创业公司、有自研推理栈的中厂</li>
+  <li>准备三个版本的项目叙述：30 秒（电梯）、3 分钟（技术面）、10 分钟（深挖），核心都是「问题 → 定位方法 → 改动 → 量化结果」</li>
+</ul>
+
+<h2><span class="idx">06</span>资源清单（只列必要的，别囤）</h2>
+<table>
+  <thead><tr><th style="width:22%">方向</th><th>材料</th></tr></thead>
+  <tbody>
+    <tr><td>CUDA</td><td>《Programming Massively Parallel Processors》前 6 章 + 官方 CUDA C Programming Guide</td></tr>
+    <tr><td>Triton</td><td>官方 tutorials 01–10（足够，不要去看第三方教程）</td></tr>
+    <tr><td>Attention</td><td>FlashAttention 1 / 2 / 3 论文（1 必读，2 选读，3 看结论）</td></tr>
+    <tr><td>引擎</td><td>vLLM 源码 + 官方 blog；SGLang 的 RadixAttention 论文（讲前缀复用最清楚）</td></tr>
+    <tr><td>系统视角</td><td>Google《Efficiently Scaling Transformer Inference》——推理系统分析的经典框架</td></tr>
+    <tr><td>量化</td><td>SmoothQuant、AWQ、GPTQ 三篇，只抓「观察到的现象 → 提出的修正」这条线</td></tr>
+  </tbody>
+</table>
+
+<h2><span class="idx">07</span>七条防坑提醒</h2>
+<ol>
+  <li><strong>不要先学完 CUDA 再找场景。</strong>两周内必须让第一个 kernel 跑出数字，否则很容易卡在"环境配了两周"。</li>
+  <li><strong>不要囤课。</strong>任何视频教程看到第 3 集还没动手，就停下写代码。</li>
+  <li><strong>数字比术语值钱。</strong>简历上「吞吐提升 23%，TTFT 降低 31%」永远赢过「熟悉 vLLM 架构」。</li>
+  <li><strong>每个结论都要有 baseline。</strong>没有对照组的"优化"在面试里会被追问到崩。</li>
+  <li><strong>接受"只有 10% 提升"。</strong>真实系统里 10% 已经是好消息，关键是你能解释它从哪来。</li>
+  <li><strong>研二下的科研不能停。</strong>把 agent 方向的实验和推理优化挂钩（比如测多轮 agent 的延迟构成），两边都能用。</li>
+  <li><strong>提前一个月开始投。</strong>rolling 招聘里，岗位放出来第一周的简历通过率最高。</li>
+</ol>
+
+<h2><span class="idx">08</span>本周就能做的三件事</h2>
+<ol>
+  <li>装好 CUDA 环境，跑通第一个 vector add，用 <code>ncu</code> 看到它的 dram 吞吐数字。</li>
+  <li>把 vLLM 在本地跑起来（量化版 7B 或 1.5B），跑一次 <code>benchmark_latency</code>，把 TTFT / TPOT 记下来。</li>
+  <li>建一个 GitHub 仓库，名字就叫 <code>llm-inference-lab</code>，把上面两个结果写进 README 的第一段。</li>
+</ol>
+
+<footer>
+  计划表 · 起点 2026-11-16 · 按周验收，允许滑动但不允许跳过验收标准
+</footer>
+
+</div>
+</body>
+</html>

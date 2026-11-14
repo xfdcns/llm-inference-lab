@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>torch.nn 层完整速查表</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #fafaf9;
+    color: #2c2c2a;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 40px 24px 80px; }
+  header { margin-bottom: 28px; }
+  h1 { font-size: 22px; font-weight: 600; margin: 0 0 8px; letter-spacing: -0.2px; }
+  .sub { color: #5f5e5a; font-size: 13px; }
+  .toolbar {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(250,250,249,0.96);
+    backdrop-filter: blur(8px);
+    padding: 12px 0 10px;
+    border-bottom: 1px solid #e7e5e0;
+    margin-bottom: 24px;
+  }
+  .searchrow { display: flex; gap: 10px; align-items: center; }
+  input[type="search"] {
+    flex: 1; padding: 9px 12px; font-size: 14px; font-family: inherit;
+    border: 1px solid #d9d7d0; border-radius: 8px; background: #fff; outline: none;
+  }
+  input[type="search"]:focus { border-color: #185FA5; box-shadow: 0 0 0 3px rgba(24,95,165,0.12); }
+  .count { color: #888780; font-size: 12px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  nav { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  nav a {
+    font-size: 12px; text-decoration: none; color: #5f5e5a;
+    padding: 4px 9px; border-radius: 6px; border: 1px solid #e7e5e0; background: #fff;
+  }
+  nav a:hover { color: #0C447C; border-color: #B5D4F4; background: #E6F1FB; }
+  section { margin-bottom: 34px; scroll-margin-top: 120px; }
+  h2 {
+    font-size: 15px; font-weight: 600; margin: 0 0 4px;
+    display: flex; align-items: baseline; gap: 8px;
+  }
+  h2 .en { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; color: #888780; font-weight: 400; }
+  .note { color: #5f5e5a; font-size: 13px; margin: 0 0 14px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 10px; }
+  .card {
+    background: #fff; border: 1px solid #e7e5e0; border-radius: 10px;
+    padding: 12px 14px; border-left: 3px solid #e7e5e0;
+  }
+  .card.hot { border-left-color: #185FA5; }
+  .name {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13px; font-weight: 600; color: #0C447C;
+  }
+  .card.hot .name::after {
+    content: "常用"; font-family: inherit; font-size: 10px; font-weight: 400;
+    color: #185FA5; background: #E6F1FB; padding: 1px 5px; border-radius: 4px; margin-left: 6px;
+    vertical-align: 1px;
+  }
+  .sig {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 11px; color: #888780; margin: 3px 0 6px; word-break: break-word;
+  }
+  .desc { font-size: 13px; color: #2c2c2a; }
+  .io {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 11px; color: #0F6E56; margin-top: 6px;
+  }
+  .warn { color: #A32D2D; font-size: 12px; margin-top: 6px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; border: 1px solid #e7e5e0; border-radius: 10px; overflow: hidden; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid #f0eeea; vertical-align: top; }
+  th { background: #f5f4f0; font-weight: 600; font-size: 12px; color: #444441; }
+  tr:last-child td { border-bottom: none; }
+  td code, .inline-code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px; background: #f5f4f0; padding: 1px 5px; border-radius: 4px; color: #0C447C;
+  }
+  footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #e7e5e0; color: #888780; font-size: 12px; }
+  .empty { display: none; color: #888780; padding: 30px 0; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>torch.nn 层完整速查表</h1>
+  <div class="sub">按功能分类 · 含关键参数与张量形状 · 标注高频层。命名空间 <span class="inline-code">torch.nn</span> 下约 100 个 Module 子类，此处覆盖常用与易混的全部。</div>
+</header>
+
+<div class="toolbar">
+  <div class="searchrow">
+    <input id="q" type="search" placeholder="搜索层名或关键词，例如 conv / 归一化 / padding / GAP">
+    <span class="count"><span id="count">—</span> 个结果</span>
+  </div>
+  <nav>
+    <a href="#s1">容器</a>
+    <a href="#s2">线性</a>
+    <a href="#s3">卷积</a>
+    <a href="#s4">池化</a>
+    <a href="#s5">填充</a>
+    <a href="#s6">归一化</a>
+    <a href="#s7">激活</a>
+    <a href="#s8">Dropout</a>
+    <a href="#s9">嵌入</a>
+    <a href="#s10">循环</a>
+    <a href="#s11">Transformer</a>
+    <a href="#s12">形状变换</a>
+    <a href="#s13">损失</a>
+    <a href="#s14">距离</a>
+    <a href="#s15">选型</a>
+  </nav>
+</div>
+
+<div class="empty" id="empty">没有匹配的层，换个关键词试试。</div>
+
+<section id="s1">
+  <h2>1 容器与组合 <span class="en">containers</span></h2>
+  <p class="note">它们本身是 Module，作用是"装别的层"。区别只在前向逻辑谁来写、是否需要命名。</p>
+  <div class="grid">
+    <div class="card hot">
+      <div class="name">nn.Sequential</div>
+      <div class="sig">Sequential(*args)</div>
+      <div class="desc">顺序串联，自动生成 forward。</div>
+      <div class="io">x → layer1 → layer2 → ... → y</div>
+    </div>
+    <div class="card hot">
+      <div class="name">nn.ModuleList</div>
+      <div class="sig">ModuleList(modules=None)</div>
+      <div class="desc">只负责注册子模块，前向必须自己写循环。适合层数动态或带分支的结构。</div>
+    </div>
+    <div class="card hot">
+      <div class="name">nn.ModuleDict</div>
+      <div class="sig">ModuleDict(modules=None)</div>
+      <div class="desc">按字符串键注册，用 key 取层。代替"用 dict 存模块"的错误做法。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.ParameterList</div>
+      <div class="sig">ParameterList(values=None)</div>
+      <div class="desc">装 nn.Parameter 而非 Module，用于可学习的系数向量等。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.ParameterDict</div>
+      <div class="sig">ParameterDict(values=None)</div>
+      <div class="desc">按名字管理的参数集合。</div>
+    </div>
+  </div>
+</section>
+
+<section id="s2">
+  <h2>2 线性与全连接 <span class="en">linear</span></h2>
+  <p class="note">最基础的仿射变换，参数量 = in × out (+ out)。</p>
+  <div class="grid">
+    <div class="card hot">
+      <div class="name">nn.Linear</div>
+      <div class="sig">Linear(in_features, out_features, bias=True)</div>
+      <div class="desc">y = xWᵀ + b。只作用于最后一维，前面的维度都是 batch。</div>
+      <div class="io">(*, in_features) → (*, out_features)</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.Bilinear</div>
+      <div class="sig">Bilinear(in1_features, in2_features, out_features)</div>
+      <div class="desc">y = x₁ᵀ A x₂ + b，双线性交互，常见于 VQA、推荐。</div>
+      <div class="io">(N, in1), (N, in2) → (N, out)</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.LazyLinear</div>
+      <div class="sig">LazyLinear(out_features)</div>
+      <div class="desc">首次前向时自动推断 in_features，省去手算维度。参数在第一次 forward 后才出现。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.Identity</div>
+      <div class="sig">Identity(*args, **kwargs)</div>
+      <div class="desc">原样返回输入。做消融实验、占位、替换某一层时用。</div>
+    </div>
+  </div>
+</section>
+
+<section id="s3">
+  <h2>3 卷积 <span class="en">convolution</span></h2>
+  <p class="note">核心参数永远这四个：kernel_size / stride / padding / dilation，外加 groups 决定分组方式。</p>
+  <div class="grid">
+    <div class="card hot">
+      <div class="name">nn.Conv1d</div>
+      <div class="sig">Conv1d(in_ch, out_ch, k, stride=1, padding=0, dilation=1, groups=1)</div>
+      <div class="desc">一维卷积，用于序列、音频、文本。</div>
+      <div class="io">(N, C, L) → (N, C_out, L_out)</div>
+    </div>
+    <div class="card hot">
+      <div class="name">nn.Conv2d</div>
+      <div class="sig">Conv2d(in_ch, out_ch, k, stride=1, padding=0, dilation=1, groups=1)</div>
+      <div class="desc">二维卷积，视觉主力。groups=in_ch=out_ch 即 depthwise；1&lt;groups&lt;in_ch 为分组卷积。</div>
+      <div class="io">(N, C, H, W) → (N, C_out, H_out, W_out)</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.Conv3d</div>
+      <div class="sig">Conv3d(in_ch, out_ch, k, ...)</div>
+      <div class="desc">三维卷积，视频、医学体数据。</div>
+      <div class="io">(N, C, D, H, W) → (N, C_out, D', H', W')</div>
+    </div>
+    <div class="card hot">
+      <div class="name">nn.ConvTranspose2d</div>
+      <div class="sig">ConvTranspose2d(in_ch, out_ch, k, stride, padding, output_padding)</div>
+      <div class="desc">转置卷积，用于上采样/解码器。stride 与 kernel 不整除时会出现棋盘格伪影。</div>
+      <div class="io">(N, C, H, W) → (N, C_out, ≈H·stride, ≈W·stride)</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.ConvTranspose1d / 3d</div>
+      <div class="sig">同 ConvTranspose2d 的 1D / 3D 版本</div>
+      <div class="desc">语音合成、视频生成里的上采样。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.LazyConv2d</div>
+      <div class="sig">LazyConv2d(out_ch, k, ...)</div>
+      <div class="desc">自动推断 in_channels。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.Unfold</div>
+      <div class="sig">Unfold(kernel_size, dilation=1, padding=0, stride=1)</div>
+      <div class="desc">im2col：把滑窗展平成列，用矩阵乘实现卷积。</div>
+      <div class="io">(N, C, H, W) → (N, C·kh·kw, L)</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.Fold</div>
+      <div class="sig">Fold(output_size, kernel_size, ...)</div>
+      <div class="desc">Unfold 的逆操作，把列还原成图。</div>
+    </div>
+  </div>
+</section>
+
+<section id="s4">
+  <h2>4 池化 <span class="en">pooling</span></h2>
+  <p class="note">全部无参数。用 Adaptive 版本可以彻底摆脱"输入尺寸必须整除"的束缚。</p>
+  <div class="grid">
+    <div class="card hot">
+      <div class="name">nn.MaxPool2d</div>
+      <div class="sig">MaxPool2d(kernel_size, stride=None, padding=0, dilation=1, return_indices=False)</div>
+      <div class="desc">窗口取最大值。stride 默认等于 kernel_size。</div>
+      <div class="io">(N, C, H, W) → (N, C, H/k, W/k)</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.MaxPool1d / 3d</div>
+      <div class="sig">同 2D 版本</div>
+      <div class="desc">序列与体数据的最大值池化。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.MaxUnpool2d</div>
+      <div class="sig">MaxUnpool2d(kernel_size, stride, padding)</div>
+      <div class="desc">反池化，必须传入 MaxPool 记录下来的 indices（segnet 类结构用）。</div>
+    </div>
+    <div class="card hot">
+      <div class="name">nn.AvgPool2d</div>
+      <div class="sig">AvgPool2d(kernel_size, stride=None, padding=0, count_include_pad=True)</div>
+      <div class="desc">窗口取平均。</div>
+    </div>
+    <div class="card hot">
+      <div class="name">nn.AdaptiveAvgPool2d</div>
+      <div class="sig">AdaptiveAvgPool2d(output_size)</div>
+      <div class="desc">直接指定输出尺寸，GAP 就写 output_size=(1,1)。让网络接受任意输入分辨率。</div>
+      <div class="io">(N, C, H, W) → (N, C, 1, 1)</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.AdaptiveMaxPool2d</div>
+      <div class="sig">AdaptiveMaxPool2d(output_size)</div>
+      <div class="desc">同上，取最大值版本。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.LPPool2d</div>
+      <div class="sig">LPPool2d(norm_type, kernel_size)</div>
+      <div class="desc">Lp 范数池化，norm_type=1 近似平均、→∞ 近似最大。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.FractionalMaxPool2d</div>
+      <div class="sig">FractionalMaxPool2d(kernel_size, output_ratio)</div>
+      <div class="desc">分数阶最大池化，带随机性，可作数据增强。</div>
+    </div>
+  </div>
+</section>
+
+<section id="s5">
+  <h2>5 填充 <span class="en">padding</span></h2>
+  <p class="note">1D / 2D / 3D 都有对应版本；日常更常用函数式 <span class="inline-code">F.pad(x, (l, r, t, b), mode=...)</span>。</p>
+  <div class="grid">
+    <div class="card">
+      <div class="name">nn.ConstantPad2d / nn.ZeroPad2d</div>
+      <div class="sig">ConstantPad2d(padding, value) / ZeroPad2d(padding)</div>
+      <div class="desc">常数填充，ZeroPad 就是 value=0 的特例。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.ReflectionPad2d</div>
+      <div class="sig">ReflectionPad2d(padding)</div>
+      <div class="desc">镜像反射填充，边缘更自然，超分/风格迁移常用。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.ReplicationPad2d</div>
+      <div class="sig">ReplicationPad2d(padding)</div>
+      <div class="desc">复制边缘像素填充，不会引入虚假的对称结构。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.CircularPad2d</div>
+      <div class="sig">CircularPad2d(padding)</div>
+      <div class="desc">循环填充，适合周期性信号（如全景图、音频）。</div>
+    </div>
+  </div>
+</section>
+
+<section id="s6">
+  <h2>6 归一化 <span class="en">normalization</span></h2>
+  <p class="note">区别只在"沿哪些维度统计均值方差"。选错是训练不收敛的头号原因之一。</p>
+  <div class="grid">
+    <div class="card hot">
+      <div class="name">nn.BatchNorm2d</div>
+      <div class="sig">BatchNorm2d(num_features, eps=1e-5, momentum=0.1, affine=True, track_running_stats=True)</div>
+      <div class="desc">沿 (N, H, W) 统计，每个通道一组统计量。依赖 batch size，小 batch 会崩。</div>
+      <div class="warn">train / eval 行为不同：eval 用 running_mean。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.BatchNorm1d / 3d</div>
+      <div class="sig">同 2D 版本</div>
+      <div class="desc">1D 用于 (N, C) 或 (N, C, L)。</div>
+    </div>
+    <div class="card hot">
+      <div class="name">nn.LayerNorm</div>
+      <div class="sig">LayerNorm(normalized_shape, eps=1e-5, elementwise_affine=True)</div>
+      <div class="desc">对每个样本的最后一维（或几维）归一化，与 batch 无关。Transformer 标配。</div>
+      <div class="io">(..., normalized_shape) → 同形状</div>
+    </div>
+    <div class="card hot">
+      <div class="name">nn.GroupNorm</div>
+      <div class="sig">GroupNorm(num_groups, num_channels)</div>
+      <div class="desc">通道分组后组内归一化，小 batch 友好，是 BN 的常用替代。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.InstanceNorm2d</div>
+      <div class="sig">InstanceNorm2d(num_features, affine=False)</div>
+      <div class="desc">每个样本每个通道独立归一化，风格迁移标配。</div>
+    </div>
+    <div class="card hot">
+      <div class="name">nn.RMSNorm</div>
+      <div class="sig">RMSNorm(normalized_shape, eps=None, elementwise_affine=True)</div>
+      <div class="desc">只除以均方根、不减均值。LLaMA 系列使用，比 LayerNorm 省一点计算。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.SyncBatchNorm</div>
+      <div class="sig">SyncBatchNorm(num_features, ...)</div>
+      <div class="desc">多卡跨 GPU 同步统计量，单卡 batch 太小、又必须用 BN 时的解法。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.LocalResponseNorm</div>
+      <div class="sig">LocalResponseNorm(size, alpha, beta, k)</div>
+      <div class="desc">AlexNet 时代的通道侧抑制，现在基本被 BN 取代。</div>
+    </div>
+  </div>
+</section>
+
+<section id="s7">
+  <h2>7 激活函数 <span class="en">activations</span></h2>
+  <p class="note">现代默认选择：视觉用 GELU / SiLU，LLM 用 SwiGLU（GLU 变体）；不要再堆 Sigmoid。</p>
+  <div class="grid">
+    <div class="card hot">
+      <div class="name">nn.ReLU</div>
+      <div class="sig">ReLU(inplace=False)</div>
+      <div class="desc">max(0, x)。inplace=True 省显存，但与残差/需保留输入的场景冲突。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.ReLU6</div>
+      <div class="sig">ReLU6(inplace=False)</div>
+      <div class="desc">上界截断到 6，移动端量化模型常用。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.LeakyReLU</div>
+      <div class="sig">LeakyReLU(negative_slope=0.01, inplace=False)</div>
+      <div class="desc">负半轴留一个斜率，缓解 ReLU 死区。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.PReLU</div>
+      <div class="sig">PReLU(num_parameters=1, init=0.25)</div>
+      <div class="desc">斜率可学习（有参数）。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.RReLU</div>
+      <div class="sig">RReLU(lower=1/8, upper=1/3, inplace=False)</div>
+      <div class="desc">负半轴斜率在训练时随机采样，起正则作用。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.ELU</div>
+      <div class="sig">ELU(alpha=1.0, inplace=False)</div>
+      <div class="desc">负半轴指数饱和，输出均值更接近 0。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.SELU</div>
+      <div class="sig">SELU(inplace=False)</div>
+      <div class="desc">配合自归一化网络（权重用 Lecun 初始化）时能保持激活分布稳定。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.CELU</div>
+      <div class="sig">CELU(alpha=1.0)</div>
+      <div class="desc">ELU 的连续可导变体。</div>
+    </div>
+    <div class="card hot">
+      <div class="name">nn.GELU</div>
+      <div class="sig">GELU(approximate='none')</div>
+      <div class="desc">高斯误差线性单元，BERT/GPT/ViT 标配。approximate='tanh' 更快。</div>
+    </div>
+    <div class="card hot">
+      <div class="name">nn.SiLU</div>
+      <div class="sig">SiLU(inplace=False)</div>
+      <div class="desc">即 Swish：x·σ(x)。LLaMA、ConvNeXt 使用。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.Mish</div>
+      <div class="sig">Mish(inplace=False)</div>
+      <div class="desc">x·tanh(softplus(x))，平滑且非单调，YOLOv4 之后常见。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.Hardswish</div>
+      <div class="sig">Hardswish(inplace=False)</div>
+      <div class="desc">SiLU 的分段线性近似，移动端友好。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.Hardsigmoid</div>
+      <div class="sig">Hardsigmoid(inplace=False)</div>
+      <div class="desc">Sigmoid 的线性近似。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.Hardtanh</div>
+      <div class="sig">Hardtanh(min_val=-1, max_val=1)</div>
+      <div class="desc">区间截断。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.Sigmoid</div>
+      <div class="sig">Sigmoid()</div>
+      <div class="desc">压到 (0,1)，只建议用在门控和二分类输出层。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.Tanh</div>
+      <div class="sig">Tanh()</div>
+      <div class="desc">压到 (-1,1)，RNN 内部使用。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.Softplus</div>
+      <div class="sig">Softplus(beta=1, threshold=20)</div>
+      <div class="desc">平滑版 ReLU，输出恒正；方差参数化的网络里用。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.Softsign</div>
+      <div class="sig">Softsign()</div>
+      <div class="desc">x/(1+|x|)，比 tanh 饱和更慢。</div>
+    </div>
+    <div class="card hot">
+      <div class="name">nn.Softmax</div>
+      <div class="sig">Softmax(dim=None)</div>
+      <div class="desc">归一化成概率。dim 必须显式给，否则 2D 以上会警告。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.LogSoftmax</div>
+      <div class="sig">LogSoftmax(dim=None)</div>
+      <div class="desc">log 概率，与 NLLLoss 搭配比 CrossEntropy 更省一点数值稳定开销。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.Softmin</div>
+      <div class="sig">Softmin(dim=None)</div>
+      <div class="desc">对负值做 softmax，相当于"取最小"的软版本。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.GLU</div>
+      <div class="sig">GLU(dim=-1)</div>
+      <div class="desc">门控线性单元：把通道对半分，一半做门。SwiGLU = GLU + SiLU。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.Threshold</div>
+      <div class="sig">Threshold(threshold, value)</div>
+      <div class="desc">低于阈值就替换为定值，很少直接用。</div>
+    </div>
+  </div>
+</section>
+
+<section id="s8">
+  <h2>8 Dropout 与正则 <span class="en">regularization</span></h2>
+  <p class="note">只在 model.train() 下生效，eval() 时自动关闭——这也是"忘记切 eval 导致验证结果抖动"的根源。</p>
+  <div class="grid">
+    <div class="card hot">
+      <div class="name">nn.Dropout</div>
+      <div class="sig">Dropout(p=0.5, inplace=False)</div>
+      <div class="desc">逐元素随机置零，训练时按 1/(1-p) 缩放保持期望不变。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.Dropout1d</div>
+      <div class="sig">Dropout1d(p=0.5)</div>
+      <div class="desc">整通道丢弃（(N,C,L) 上按通道），用于 1D 特征。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.Dropout2d</div>
+      <div class="sig">Dropout2d(p=0.5)</div>
+      <div class="desc">整通道丢弃，比逐元素更能保留空间相关性。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.Dropout3d</div>
+      <div class="sig">Dropout3d(p=0.5)</div>
+      <div class="desc">3D 版整通道丢弃。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.AlphaDropout</div>
+      <div class="sig">AlphaDropout(p=0.5)</div>
+      <div class="desc">保持均值方差不变，配合 SELU 使用。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.FeatureAlphaDropout</div>
+      <div class="sig">FeatureAlphaDropout(p=0.5)</div>
+      <div class="desc">整通道版 AlphaDropout。</div>
+    </div>
+  </div>
+</section>
+
+<section id="s9">
+  <h2>9 嵌入 <span class="en">embedding</span></h2>
+  <p class="note">本质是一张可训练的查找表，参数量 = num_embeddings × embedding_dim，词表大时非常占显存。</p>
+  <div class="grid">
+    <div class="card hot">
+      <div class="name">nn.Embedding</div>
+      <div class="sig">Embedding(num_embeddings, embedding_dim, padding_idx=None, max_norm=None, sparse=False)</div>
+      <div class="desc">整数索引查表。padding_idx 的向量固定为 0 且不更新梯度。</div>
+      <div class="io">(N, L) 整型 → (N, L, D)</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.EmbeddingBag</div>
+      <div class="sig">EmbeddingBag(num_embeddings, embedding_dim, mode='mean')</div>
+      <div class="desc">查表后直接聚合（sum/mean/max），不展开成 L×D，省内存。变长序列友好。</div>
+      <div class="io">索引 + offsets → (N, D)</div>
+    </div>
+  </div>
+</section>
+
+<section id="s10">
+  <h2>10 循环网络 <span class="en">recurrent</span></h2>
+  <p class="note">默认 batch_first=False，输入是 (seq_len, batch, feature)。几乎所有"形状对不上"的报错都源于此。</p>
+  <div class="grid">
+    <div class="card hot">
+      <div class="name">nn.LSTM</div>
+      <div class="sig">LSTM(input_size, hidden_size, num_layers=1, batch_first=False, bidirectional=False)</div>
+      <div class="desc">长短期记忆，输出 (output, (h_n, c_n))。</div>
+      <div class="io">(L, N, in) → (L, N, H·dirs)</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.GRU</div>
+      <div class="sig">GRU(input_size, hidden_size, ...)</div>
+      <div class="desc">门控循环单元，比 LSTM 少一个门，参数更少、常常效果相当。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.RNN</div>
+      <div class="sig">RNN(input_size, hidden_size, nonlinearity='tanh')</div>
+      <div class="desc">最朴素的循环层，长序列梯度消失严重。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.LSTMCell / nn.GRUCell / nn.RNNCell</div>
+      <div class="sig">Cell(input_size, hidden_size)</div>
+      <div class="desc">只算一个时间步，需要自己写循环。适合自定义控制流。</div>
+    </div>
+  </div>
+</section>
+
+<section id="s11">
+  <h2>11 Transformer 与注意力 <span class="en">transformer</span></h2>
+  <p class="note">想自己搭结构用 MultiheadAttention；想开箱即用直接上 Transformer 系列；追求速度用函数式 SDPA。</p>
+  <div class="grid">
+    <div class="card hot">
+      <div class="name">nn.MultiheadAttention</div>
+      <div class="sig">MultiheadAttention(embed_dim, num_heads, dropout=0.0, batch_first=False)</div>
+      <div class="desc">多头注意力。q=k=v 是自注意力；q 来自解码器、k/v 来自编码器就是交叉注意力。</div>
+      <div class="io">(L, N, E) → (L, N, E) + 权重</div>
+    </div>
+    <div class="card hot">
+      <div class="name">nn.TransformerEncoderLayer</div>
+      <div class="sig">TransformerEncoderLayer(d_model, nhead, dim_feedforward=2048, dropout=0.1, activation='relu', norm_first=False)</div>
+      <div class="desc">单层编码器：自注意力 + FFN + 两个残差归一化。norm_first=True 是 Pre-LN，训练更稳。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.TransformerDecoderLayer</div>
+      <div class="sig">TransformerDecoderLayer(d_model, nhead, ...)</div>
+      <div class="desc">单层解码器：带掩码自注意力 + 交叉注意力 + FFN。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.TransformerEncoder</div>
+      <div class="sig">TransformerEncoder(encoder_layer, num_layers, norm=None)</div>
+      <div class="desc">把同一层复制 num_layers 份堆叠，可选最后加一个 LayerNorm。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.TransformerDecoder</div>
+      <div class="sig">TransformerDecoder(decoder_layer, num_layers, norm=None)</div>
+      <div class="desc">解码器堆叠。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.Transformer</div>
+      <div class="sig">Transformer(d_model=512, nhead=8, num_encoder_layers=6, num_decoder_layers=6, dim_feedforward=2048)</div>
+      <div class="desc">完整编码器-解码器架构，含位置编码与输出投影。</div>
+    </div>
+  </div>
+</section>
+
+<section id="s12">
+  <h2>12 形状变换与上采样 <span class="en">shape &amp; upsample</span></h2>
+  <p class="note">这些层没有参数，只改布局。写模型时用它们代替裸的 view/reshape，形状会写进 state_dict 之外的显式声明里，更好读。</p>
+  <div class="grid">
+    <div class="card hot">
+      <div class="name">nn.Flatten</div>
+      <div class="sig">Flatten(start_dim=1, end_dim=-1)</div>
+      <div class="desc">展平连续维度，保留 batch 维。</div>
+      <div class="io">(N, C, H, W) → (N, C·H·W)</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.Unflatten</div>
+      <div class="sig">Unflatten(dim, unflattened_size)</div>
+      <div class="desc">Flatten 的逆操作。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.Upsample</div>
+      <div class="sig">Upsample(size=None, scale_factor=None, mode='nearest')</div>
+      <div class="desc">插值上采样。mode 可选 nearest / bilinear / bicubic。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.PixelShuffle</div>
+      <div class="sig">PixelShuffle(upscale_factor)</div>
+      <div class="desc">亚像素卷积：把通道重排成空间分辨率，无插值伪影，超分常用。</div>
+      <div class="io">(N, C·r², H, W) → (N, C, H·r, W·r)</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.PixelUnshuffle</div>
+      <div class="sig">PixelUnshuffle(downscale_factor)</div>
+      <div class="desc">PixelShuffle 的逆操作。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.ChannelShuffle</div>
+      <div class="sig">ChannelShuffle(groups)</div>
+      <div class="desc">通道分组打乱，ShuffleNet 的核心操作。</div>
+    </div>
+  </div>
+</section>
+
+<section id="s13">
+  <h2>13 损失函数 <span class="en">losses</span></h2>
+  <p class="note">它们也是 Module，所以能挂进 Sequential、也能注册进模型。默认 reduction='mean'。</p>
+  <div class="grid">
+    <div class="card hot">
+      <div class="name">nn.CrossEntropyLoss</div>
+      <div class="sig">CrossEntropyLoss(weight=None, ignore_index=-100, label_smoothing=0.0)</div>
+      <div class="desc">内部已含 LogSoftmax。输入是 logits，不要自己再套 Softmax。</div>
+      <div class="io">(N, C) logits + (N,) 类别 → 标量</div>
+    </div>
+    <div class="card hot">
+      <div class="name">nn.BCEWithLogitsLoss</div>
+      <div class="sig">BCEWithLogitsLoss(pos_weight=None)</div>
+      <div class="desc">Sigmoid + BCE 的数值稳定版，多标签/二分类首选。pos_weight 处理正负样本不均衡。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.BCELoss</div>
+      <div class="sig">BCELoss(weight=None)</div>
+      <div class="desc">输入必须已经过 Sigmoid，容易数值溢出，一般用上面那个。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.NLLLoss</div>
+      <div class="sig">NLLLoss()</div>
+      <div class="desc">配合 LogSoftmax 使用，等价于 CrossEntropyLoss。</div>
+    </div>
+    <div class="card hot">
+      <div class="name">nn.MSELoss</div>
+      <div class="sig">MSELoss(reduction='mean')</div>
+      <div class="desc">均方误差，回归任务。对离群点敏感。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.L1Loss</div>
+      <div class="sig">L1Loss()</div>
+      <div class="desc">绝对值误差，对离群点更鲁棒，但在 0 点不可导。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.SmoothL1Loss</div>
+      <div class="sig">SmoothL1Loss(beta=1.0)</div>
+      <div class="desc">Huber 损失，小误差用 L2、大误差用 L1。检测框回归标配。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.KLDivLoss</div>
+      <div class="sig">KLDivLoss(log_target=False)</div>
+      <div class="desc">KL 散度，蒸馏时用。注意输入要先取 log。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.TripletMarginLoss</div>
+      <div class="sig">TripletMarginLoss(margin=1.0, p=2)</div>
+      <div class="desc">三元组损失，度量学习/检索。需要 anchor/positive/negative 三个输入。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.CosineEmbeddingLoss</div>
+      <div class="sig">CosineEmbeddingLoss(margin=0.0)</div>
+      <div class="desc">按标签把相似对拉近、不相似对推远。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.MarginRankingLoss</div>
+      <div class="sig">MarginRankingLoss(margin=0.0)</div>
+      <div class="desc">排序损失，要求正样本得分高于负样本至少 margin。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.HingeEmbeddingLoss</div>
+      <div class="sig">HingeEmbeddingLoss(margin=1.0)</div>
+      <div class="desc">合页损失，常用于判断两个输入是否相似。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.MultiLabelSoftMarginLoss</div>
+      <div class="sig">MultiLabelSoftMarginLoss()</div>
+      <div class="desc">多标签分类的合页式损失。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.CTCLoss</div>
+      <div class="sig">CTCLoss(blank=0, zero_infinity=False)</div>
+      <div class="desc">无对齐序列损失，语音识别标配。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.PoissonNLLLoss</div>
+      <div class="sig">PoissonNLLLoss(log_input=True)</div>
+      <div class="desc">泊松负对数似然，计数类回归。</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.GaussianNLLLoss</div>
+      <div class="sig">GaussianNLLLoss()</div>
+      <div class="desc">异方差回归：模型同时预测均值和方差。</div>
+    </div>
+  </div>
+</section>
+
+<section id="s14">
+  <h2>14 距离与相似度 <span class="en">distance</span></h2>
+  <div class="grid">
+    <div class="card">
+      <div class="name">nn.CosineSimilarity</div>
+      <div class="sig">CosineSimilarity(dim=1, eps=1e-8)</div>
+      <div class="desc">逐样本余弦相似度，检索/对比学习里算相似矩阵。</div>
+      <div class="io">(N, D), (N, D) → (N,)</div>
+    </div>
+    <div class="card">
+      <div class="name">nn.PairwiseDistance</div>
+      <div class="sig">PairwiseDistance(p=2.0, eps=1e-6)</div>
+      <div class="desc">逐样本 p 范数距离。</div>
+    </div>
+  </div>
+</section>
+
+<section id="s15">
+  <h2>附 选型速查 <span class="en">cheatsheet</span></h2>
+  <p class="note">上面是"有什么"，这里回答"用哪个"。</p>
+  <table>
+    <thead>
+      <tr><th style="width:22%">场景</th><th>选择</th><th style="width:34%">理由</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>归一化</td>
+        <td><code>CNN + 大 batch</code> → BatchNorm2d；<code>小 batch</code> → GroupNorm；<code>Transformer / NLP</code> → LayerNorm；<code>LLM</code> → RMSNorm</td>
+        <td>区别在于沿哪几个维度统计，以及是否依赖 batch size</td>
+      </tr>
+      <tr>
+        <td>激活</td>
+        <td><code>视觉</code> → GELU 或 SiLU；<code>LLM FFN</code> → SwiGLU；<code>移动端</code> → ReLU6 / Hardswish</td>
+        <td>ReLU 已不是默认最优解，但仍是基线</td>
+      </tr>
+      <tr>
+        <td>上采样</td>
+        <td><code>语义分割</code> → ConvTranspose2d + BN；<code>超分</code> → PixelShuffle；<code>简单放大</code> → Upsample(bilinear)</td>
+        <td>转置卷积有棋盘格缺陷，像素重排无插值伪影</td>
+      </tr>
+      <tr>
+        <td>全局池化</td>
+        <td><code>AdaptiveAvgPool2d((1,1))</code></td>
+        <td>摆脱输入尺寸约束，同时替代巨大的全连接层</td>
+      </tr>
+      <tr>
+        <td>注意力</td>
+        <td><code>自建结构</code> → MultiheadAttention；<code>追求速度</code> → F.scaled_dot_product_attention</td>
+        <td>SDPA 会走 FlashAttention / 内存高效内核</td>
+      </tr>
+      <tr>
+        <td>分类损失</td>
+        <td><code>单标签</code> → CrossEntropyLoss；<code>多标签</code> → BCEWithLogitsLoss</td>
+        <td>前者内部含 softmax，后者内部含 sigmoid，都吃 logits</td>
+      </tr>
+      <tr>
+        <td>容器</td>
+        <td><code>纯串行</code> → Sequential；<code>有分支/残差</code> → ModuleList + 手写 forward</td>
+        <td>Sequential 无法表达 if 与跳连</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<footer>
+  共 <span id="total">—</span> 个层条目 · 覆盖 torch.nn 常用与易混部分 · 参数签名以 PyTorch 2.x 为准
+</footer>
+
+</div>
+
+<script>
+  var cards = Array.prototype.slice.call(document.querySelectorAll('.card'));
+  var sections = Array.prototype.slice.call(document.querySelectorAll('section'));
+  var q = document.getElementById('q');
+  var countEl = document.getElementById('count');
+  var emptyEl = document.getElementById('empty');
+
+  document.getElementById('total').textContent = cards.length;
+  countEl.textContent = cards.length;
+
+  q.addEventListener('input', function () {
+    var v = q.value.trim().toLowerCase();
+    var n = 0;
+    cards.forEach(function (c) {
+      var hit = !v || c.textContent.toLowerCase().indexOf(v) !== -1;
+      c.style.display = hit ? '' : 'none';
+      if (hit) n++;
+    });
+    sections.forEach(function (s) {
+      var has = Array.prototype.some.call(s.querySelectorAll('.card'), function (c) {
+        return c.style.display !== 'none';
+      });
+      s.style.display = has ? '' : 'none';
+    });
+    countEl.textContent = n;
+    emptyEl.style.display = n === 0 ? 'block' : 'none';
+  });
+</script>
+</body>
+</html>
