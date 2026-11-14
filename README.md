@@ -25,9 +25,17 @@ notes/    ncu / nsys 原始报告与临时记录
 
 ## 文档索引
 
-- [16 周计划](docs/inference-intern-16weeks.html) — 逐周动作与验收标准
-- [nn.Module 精读](docs/nn-module-deep-dive.html) — `__init__` 属性、`__setattr__` 路由、`_apply`、`state_dict`、四类 hook
-- [torch.nn 层速查](docs/pytorch-nn-layers.html) — 14 类约 95 个层条目，可搜索
+> 下面三个链接走 GitHub Pages，**点开即渲染**，不会显示 HTML 源码。
+
+| 文档 | 内容 |
+|---|---|
+| [16 周计划](https://xfdcns.github.io/llm-inference-lab/docs/inference-intern-16weeks.html) | 逐周动作与验收标准，可当检查表用 |
+| [nn.Module 精读](https://xfdcns.github.io/llm-inference-lab/docs/nn-module-deep-dive.html) | `__init__` 属性、`__setattr__` 路由、`_apply`、`state_dict`、四类 hook |
+| [torch.nn 层速查](https://xfdcns.github.io/llm-inference-lab/docs/pytorch-nn-layers.html) | 14 类约 95 个层条目，可搜索 |
+
+落地页：<https://xfdcns.github.io/llm-inference-lab/>
+
+> 注意：在 `github.com` 的文件树里点 `.html` 只会看到源码，那是 GitHub 的既定行为。要看渲染效果一律用上面的 `github.io` 地址。
 
 ## 实验记录规范
 
